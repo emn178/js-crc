@@ -1,0 +1,9 @@
+{
+  "name": "js-crc",
+  "version": "0.1.0",
+  "main": ["build/crc.min.js"],
+  "ignore": [
+    "samples",
+    "tests"
+  ]
+}
