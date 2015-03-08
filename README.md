@@ -5,8 +5,8 @@
 Simple CRC checksum functions for JavaScript(CRC-16 and CRC-32).
 
 ## Download
-[Compress](https://raw.github.com/emn178/js-crc/master/build/js-crc.min.js)  
-[Uncompress](https://raw.github.com/emn178/js-crc/master/src/js-crc.js)
+[Compress](https://raw.github.com/emn178/js-crc/master/build/crc.min.js)  
+[Uncompress](https://raw.github.com/emn178/js-crc/master/src/crc.js)
 
 ## Installation
 You can also install js-crc by using Bower.
