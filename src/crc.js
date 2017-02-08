@@ -1,19 +1,24 @@
-/*
- * js-crc v0.1.0
- * https://github.com/emn178/js-crc
+/**
+ * [js-crc]{@link https://github.com/emn178/js-crc}
  *
- * Copyright 2015, emn178@gmail.com
- *
- * Licensed under the MIT license:
- * http://www.opensource.org/licenses/MIT
+ * @namespace crc
+ * @version 0.2.0
+ * @author Chen, Yi-Cyuan [emn178@gmail.com]
+ * @copyright Chen, Yi-Cyuan 2015-2017
+ * @license MIT
  */
-;(function(root, undefined) {
+/*jslint bitwise: true */
+(function () {
   'use strict';
 
-  var NODE_JS = typeof(module) != 'undefined';
-  if(NODE_JS) {
+  var root = typeof window === 'object' ? window : {};
+  var NODE_JS = !root.JS_CRC_NO_NODE_JS && typeof process === 'object' && process.versions && process.versions.node;
+  if (NODE_JS) {
     root = global;
   }
+  var COMMON_JS = !root.JS_CRC_NO_COMMON_JS && typeof module === 'object' && module.exports;
+  var AMD = typeof define === 'function' && define.amd;
+  var ARRAY_BUFFER = !root.JS_CRC_NO_ARRAY_BUFFER && typeof ArrayBuffer !== 'undefined';
   var HEX_CHARS = '0123456789abcdef'.split('');
 
   var Modules = [
@@ -32,36 +37,36 @@
   ];
 
   var i, j, k, b;
-  for(i = 0;i < Modules.length;++i) {
+  for (i = 0; i < Modules.length; ++i) {
     var m = Modules[i];
-    m.method = (function(m) {
-      return function(message) {
+    m.method = (function (m) {
+      return function (message) {
         return crc(message, m);
       };
     })(m);
     m.table = [];
-    for(j = 0;j < 256;++j) {
+    for (j = 0; j < 256; ++j) {
       b = j;
-      for(k = 0;k < 8;++k) {
+      for (k = 0; k < 8; ++k) {
         b = b & 1 ? m.polynom ^ (b >>> 1) : b >>> 1;
       }
       m.table[j] = b >>> 0;
     }
   }
 
-  var crc = function(message, module) {
-    var notString = typeof(message) != 'string';
-    if(notString && message.constructor == ArrayBuffer) {
+  var crc = function (message, module) {
+    var notString = typeof message !== 'string';
+    if (notString && ARRAY_BUFFER && message instanceof ArrayBuffer) {
       message = new Uint8Array(message);
     }
 
     var crc = module.initValue, code, i, length = message.length, table = module.table;
-    if(notString) {
-      for(i = 0;i < length;++i) {
+    if (notString) {
+      for (i = 0; i < length; ++i) {
         crc = table[(crc ^ message[i]) & 0xFF] ^ (crc >>> 8);
       }
     } else {
-      for(i = 0;i < length;++i) {
+      for (i = 0; i < length; ++i) {
         code = message.charCodeAt(i);
         if (code < 0x80) {
           crc = table[(crc ^ code) & 0xFF] ^ (crc >>> 8);
@@ -84,7 +89,7 @@
     crc ^= module.initValue;
 
     var hex = '';
-    if(module.bytes > 2) {
+    if (module.bytes > 2) {
       hex += HEX_CHARS[(crc >> 28) & 0x0F] + HEX_CHARS[(crc >> 24) & 0x0F] +
              HEX_CHARS[(crc >> 20) & 0x0F] + HEX_CHARS[(crc >> 16) & 0x0F];
     }
@@ -93,14 +98,22 @@
     return hex;
   };
 
-  var exports;
-  if(!root.HI_CRC32_TEST && NODE_JS) {
-    exports = module.exports = {};
-  } else if(root) {
-    exports = root;
-  }
-  for(i = 0;i < Modules.length;++i) {
+  var exports = {};
+  for (i = 0;i < Modules.length;++i) {
     var m = Modules[i];
     exports[m.name] = m.method;
   }
-}(this));
+  if (COMMON_JS) {
+    module.exports = exports;
+  } else {
+    for (i = 0;i < Modules.length;++i) {
+      var m = Modules[i];
+      root[m.name] = m.method;
+    }
+    if (AMD) {
+      define(function() {
+        return exports;
+      });
+    }
+  }
+})();

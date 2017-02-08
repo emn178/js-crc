@@ -29,11 +29,13 @@
         });
       });
 
-      describe('ArrayBuffer', function() {
-        it('should be successful', function() {
-          expect(crc32(new ArrayBuffer(1))).to.be('d202ef8d');
+      if (typeof JS_CRC_NO_ARRAY_BUFFER === 'undefined') {
+        describe('ArrayBuffer', function() {
+          it('should be successful', function() {
+            expect(crc32(new ArrayBuffer(1))).to.be('d202ef8d');
+          });
         });
-      });
+      }
     });
   });
 
@@ -67,11 +69,13 @@
         });
       });
 
-      describe('ArrayBuffer', function() {
-        it('should be successful', function() {
-          expect(crc16(new ArrayBuffer(1))).to.be('0000');
+      if (typeof JS_CRC_NO_ARRAY_BUFFER === 'undefined') {
+        describe('ArrayBuffer', function() {
+          it('should be successful', function() {
+            expect(crc16(new ArrayBuffer(1))).to.be('0000');
+          });
         });
-      });
+      }
     });
   });
 })(crc32, crc16);

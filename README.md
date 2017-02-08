@@ -25,36 +25,30 @@ crc16('Message to hash');
 ```
 If you use node.js, you should require the module first:
 ```JavaScript
-crc32 = require('js-crc').crc32;
-crc16 = require('js-crc').crc16;
+var crc32 = require('js-crc').crc32;
+var crc16 = require('js-crc').crc16;
 ```
+It supports AMD:
+```JavaScript
+require(['your/path/crc.js'], function (crc) {
+  var crc32 = crc.crc32;
+  var crc16 = crc.crc16;
+  // ...
+});
 
 ## Example
-Code
 ```JavaScript
-crc32('The quick brown fox jumps over the lazy dog');
-crc32('The quick brown fox jumps over the lazy dog.');
+crc32('The quick brown fox jumps over the lazy dog'); // 414fa339
+crc32('The quick brown fox jumps over the lazy dog.'); // 519025e9
+
+// It also supports byte `Array`, `Uint8Array`, `ArrayBuffer` input:
+crc32([0]); // d202ef8d
+crc32(new Uint8Array([0])); // d202ef8d
 ```
-Output
-
-    414fa339
-    519025e9
-
-It also supports byte `Array`, `Uint8Array`, `ArrayBuffer` input:
-
-Code
-```JavaScript
-crc32([0]);
-crc32(new Uint8Array([0]));
-```
-Output
-
-    d202ef8d
-    d202ef8d
 
 ## License
 The project is released under the [MIT license](http://www.opensource.org/licenses/MIT).
 
 ## Contact
 The project's website is located at https://github.com/emn178/js-crc  
-Author: emn178@gmail.com
+Author: Chen, Yi-Cyuan (emn178@gmail.com)
