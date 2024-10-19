@@ -119,10 +119,16 @@
 
   function Crc(options) {
     this.options = options;
-    this.msb = (1 << (options.width - 1)) >>> 0;
+    this.bitOffset = options.width % 8;
+    if (this.bitOffset) {
+      this.bitOffset = 8 - this.bitOffset;
+    }
+    var msbBit = Math.ceil(options.width / 8) * 8;
+    this.msb = (1 << (msbBit - 1)) >>> 0;
+    this.msbOffset = msbBit - 8;
     this.mask = 2**options.width - 1;
-    this.crc = this.options.init;
-    this.poly = this.options.poly;
+    this.crc = this.options.init << this.bitOffset;
+    this.poly = this.options.poly << this.bitOffset;
   }
 
   Crc.prototype.update = function (message) {
@@ -166,7 +172,7 @@
     if (this.options.refin) {
       byte = reverse(byte, 8);
     }
-    crc = crc ^ (byte << (this.options.width - 8));
+    crc = crc ^ (byte << this.msbOffset);
     for (var j = 0; j < 8; ++j) {
       if (crc & this.msb) {
         crc = (crc << 1) ^ this.poly;
@@ -182,6 +188,7 @@
       return;
     }
     this.finalized = true;
+    this.crc = (this.crc >>> this.bitOffset) & this.mask;
     if (this.options.refout) {
       this.crc = reverse(this.crc, this.options.width);
     }
