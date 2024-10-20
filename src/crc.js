@@ -123,13 +123,50 @@
     if (this.bitOffset) {
       this.bitOffset = 8 - this.bitOffset;
     }
-    var msbBit = Math.ceil(options.width / 8) * 8;
-    this.msb = (1 << (msbBit - 1)) >>> 0;
-    this.msbOffset = msbBit - 8;
-    this.mask = 2**options.width - 1;
-    this.crc = this.options.init << this.bitOffset;
-    this.poly = this.options.poly << this.bitOffset;
+    var bytes = Math.ceil(options.width / 8);
+    var bits = (bytes * 8) % 32;
+    if (!bits) {
+      bits = 32;
+    }
+    this.msb = (1 << (bits - 1)) >>> 0;
+    this.msbOffset = bits - 8;
+    var maskBits = options.width % 32;
+    if (!maskBits) {
+      maskBits = 32;
+    }
+    this.mask = 2**maskBits - 1;
+    if (options.width > 32) {
+      this.crc = this.options.init.slice();
+      this.poly = this.options.poly.slice();
+      this.leftShift(this.crc, this.bitOffset);
+      this.leftShift(this.poly, this.bitOffset);
+    } else {
+      this.crc = this.options.init << this.bitOffset;
+      this.poly = this.options.poly << this.bitOffset;
+    }
   }
+
+  Crc.prototype.leftShift = function (words, bits) {
+    if (!bits) {
+      return;
+    }
+    var i = 0;
+    for (; i < words.length - 1; ++i) {
+      words[i] = (words[i] << bits) | (words[i + 1] >>> (32 - bits));
+    }
+    words[i] = (words[i] << bits);
+  };
+
+  Crc.prototype.rightShift = function (words, bits) {
+    if (!bits) {
+      return;
+    }
+    var i = words.length - 1;
+    for (; i > 0; --i) {
+      words[i] = (words[i - 1] << (32 - bits)) | (words[i] >>> bits);
+    }
+    words[i] = words[i] >>> bits;
+  };
 
   Crc.prototype.update = function (message) {
     if (this.finalized) {
@@ -172,12 +209,26 @@
     if (this.options.refin) {
       byte = reverse(byte, 8);
     }
-    crc = crc ^ (byte << this.msbOffset);
-    for (var j = 0; j < 8; ++j) {
-      if (crc & this.msb) {
-        crc = (crc << 1) ^ this.poly;
-      } else {
-        crc = crc << 1;
+    if (this.options.width > 32) {
+      crc[0] = crc[0] ^ (byte << this.msbOffset);
+      for (var j = 0; j < 8; ++j) {
+        if (crc[0] & this.msb) {
+          this.leftShift(crc, 1);
+          for (var i = 0; i < crc.length; ++i) {
+            crc[i] = crc[i] ^ this.poly[i];
+          }
+        } else {
+          this.leftShift(crc, 1);
+        }
+      }
+    } else {
+      crc = crc ^ (byte << this.msbOffset);
+      for (var j = 0; j < 8; ++j) {
+        if (crc & this.msb) {
+          crc = (crc << 1) ^ this.poly;
+        } else {
+          crc = crc << 1;
+        }
       }
     }
     this.crc = crc;
@@ -188,18 +239,50 @@
       return;
     }
     this.finalized = true;
-    this.crc = (this.crc >>> this.bitOffset) & this.mask;
-    if (this.options.refout) {
-      this.crc = reverse(this.crc, this.options.width);
+    if (this.options.width > 32) {
+      this.rightShift(this.crc, this.bitOffset);
+      this.crc[0] = this.crc[0] & this.mask;
+      if (this.options.refout) {
+        this.crc = this.crc.reverse();
+        for (var i = 0; i < this.crc.length; ++i) {
+          this.crc[i] = reverse(this.crc[i], 32)
+        }
+        var offset = this.options.width % 32;
+        if (offset) {
+          offset = 32 - offset;
+        }
+        this.rightShift(this.crc, offset);
+      }
+      for (var i = 0; i < this.crc.length; ++i) {
+        this.crc[i] ^= this.options.xorout[i];
+      }
+    } else {
+      this.crc = (this.crc >>> this.bitOffset) & this.mask;
+      if (this.options.refout) {
+        this.crc = reverse(this.crc, this.options.width);
+      }
+      this.crc ^= this.options.xorout;
     }
-    this.crc ^= this.options.xorout;
   };
 
   Crc.prototype.hex = function () {
     this.finalize();
     var hex = [];
-    for (var i = 0; i < this.options.width; i += 4) {
-      hex.unshift(HEX_CHARS[(this.crc >> i) & 0x0F]);
+    if (this.options.width > 32) {
+      for (var j = this.crc.length - 1; j >= 0; --j) {
+        var crc = this.crc[j];
+        var length = j === 0 ? this.options.width % 32 : 32;
+        if (!length) {
+          length = 32;
+        }
+        for (var i = 0; i < length; i += 4) {
+          hex.unshift(HEX_CHARS[(crc >> i) & 0x0F]);
+        }
+      }
+    } else {
+      for (var i = 0; i < this.options.width; i += 4) {
+        hex.unshift(HEX_CHARS[(this.crc >> i) & 0x0F]);
+      }
     }
     return hex.join('');
   };
