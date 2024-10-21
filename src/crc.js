@@ -64,47 +64,149 @@
 
   var OUTPUT_TYPES = ['hex', 'array'];
 
-  var Modules = [
+  var MODELS = [
     {
-      name: 'crc32',
       width: 32,
-      poly: 0x4C11DB7,
-      init: 0xFFFFFFFF,
-      xorout: 0xFFFFFFFF,
+      poly: 0x04c11db7,
+      init: 0xffffffff,
       refin: true,
-      refout: true
+      refout: true,
+      xorout: 0xffffffff,
+      // CRC-32/ISO-HDLC
+      name: 'crc32'
     },
     {
-      name: 'crc16',
       width: 16,
       poly: 0x8005,
-      init: 0,
-      xorout: 0,
+      init: 0x0000,
       refin: true,
-      refout: true
+      refout: true,
+      xorout: 0x0000,
+      // CRC-16/ARC
+      name: 'crc16'
     }
   ];
 
-  var createOutputMethod = function (outputType, module) {
+  var createOutputMethod = function (outputType, options) {
     return function (message) {
-      return new Crc(module).update(message)[outputType]();
+      return new Crc(options).update(message)[outputType]();
     };
   };
 
   var createMethod = function (module) {
-    var method = createOutputMethod('hex', module);
+    var bitOffset = module.width % 8;
+    if (bitOffset) {
+      bitOffset = 8 - bitOffset;
+    }
+    var firstBlockBytes = Math.ceil(module.width / 8) % 4 || 4;
+    var firstBlockBits = firstBlockBytes << 3;
+    var msb = (1 << (firstBlockBits - 1)) >>> 0;
+    var msbOffset = firstBlockBits - 8;
+    var maskBits = module.width % 32 || 32;
+    var mask = 2**maskBits - 1;
+    var crc, poly, tableId;
+    var multiWords = module.width > 32;
+    if (multiWords) {
+      crc = module.init.slice();
+      poly = module.poly.slice();
+      leftShift(crc, bitOffset);
+      leftShift(poly, bitOffset);
+      tableId = [poly.join('-'), msbOffset, msb].join('_');
+    } else {
+      crc = module.init << bitOffset;
+      poly = module.poly << bitOffset;
+      tableId = [poly, msbOffset, msb].join('_');
+    }
+    var options = {
+      refin: module.refin,
+      refout: module.refout,
+      xorout: module.xorout,
+      width: module.width,
+      multiWords: multiWords,
+      bitOffset: bitOffset,
+      msb: msb,
+      msbOffset: msbOffset,
+      mask: mask,
+      crc: crc,
+      poly: poly,
+      tableId: tableId,
+      maskBits: maskBits
+    };
+    var method = createOutputMethod('hex', options);
     method.create = function () {
-      return new Crc(module);
+      return new Crc(options);
     };
     method.update = function (message) {
       return method.create().update(message);
     };
     for (var i = 0; i < OUTPUT_TYPES.length; ++i) {
       var type = OUTPUT_TYPES[i];
-      method[type] = createOutputMethod(type, module);
+      method[type] = createOutputMethod(type, options);
     }
     return method;
   };
+
+  function leftShift(words, bits) {
+    if (!bits) {
+      return;
+    }
+    var i = 0;
+    for (; i < words.length - 1; ++i) {
+      words[i] = (words[i] << bits) | (words[i + 1] >>> (32 - bits));
+    }
+    words[i] = (words[i] << bits);
+  }
+
+  function rightShift(words, bits) {
+    if (!bits) {
+      return;
+    }
+    var i = words.length - 1;
+    for (; i > 0; --i) {
+      words[i] = (words[i - 1] << (32 - bits)) | (words[i] >>> bits);
+    }
+    words[i] = words[i] >>> bits;
+  }
+
+  function xor(a, b) {
+    for (var i = 0; i < a.length; ++i) {
+      a[i] ^= b[i];
+    }
+  }
+
+  var cache = {};
+  function getTable(tableId, poly, msbOffset, msb) {
+    if (!cache[tableId]) {
+      cache[tableId] = createTable(poly, msbOffset, msb);
+    }
+    return cache[tableId];
+  }
+
+  function createTable(poly, msbOffset, msb) {
+    var table = [];
+    var multiWords = isArray(poly);
+    if (!multiWords) {
+      poly = [poly]
+    }
+    for (i = 0; i < 256; ++i) {
+      var byte = [i << msbOffset];
+      for (var j = 1; j < poly.length; ++j) {
+        byte[j] = 0;
+      }
+      for (var j = 0; j < 8; ++j) {
+        if (byte[0] & msb) {
+          leftShift(byte, 1);
+          for (var k = 0; k < poly.length; ++k) {
+            byte[k] = byte[k] ^ poly[k];
+          }
+        } else {
+          leftShift(byte, 1);
+        }
+      }
+      table[i] = multiWords ? byte : byte[0];
+    }
+    return table;
+  }
 
   function reverse(val, width) {
     var result = 0;
@@ -117,56 +219,26 @@
     return result;
   }
 
-  function Crc(options) {
-    this.options = options;
-    this.bitOffset = options.width % 8;
-    if (this.bitOffset) {
-      this.bitOffset = 8 - this.bitOffset;
-    }
-    var bytes = Math.ceil(options.width / 8);
-    var bits = (bytes * 8) % 32;
-    if (!bits) {
-      bits = 32;
-    }
-    this.msb = (1 << (bits - 1)) >>> 0;
-    this.msbOffset = bits - 8;
-    var maskBits = options.width % 32;
-    if (!maskBits) {
-      maskBits = 32;
-    }
-    this.mask = 2**maskBits - 1;
-    if (options.width > 32) {
-      this.crc = this.options.init.slice();
-      this.poly = this.options.poly.slice();
-      this.leftShift(this.crc, this.bitOffset);
-      this.leftShift(this.poly, this.bitOffset);
-    } else {
-      this.crc = this.options.init << this.bitOffset;
-      this.poly = this.options.poly << this.bitOffset;
-    }
+  var REVERSE_BYTE = [];
+  for (var i = 0; i < 256; ++i) {
+    REVERSE_BYTE[i] = reverse(i, 8);
   }
 
-  Crc.prototype.leftShift = function (words, bits) {
-    if (!bits) {
-      return;
+  function Crc(options) {
+    this.options = options;
+    this.refin = options.refin;
+    this.multiWords = options.multiWords;
+    this.bitOffset = options.bitOffset;
+    this.msbOffset = options.msbOffset;
+    this.maskBits = options.maskBits;
+    this.mask = options.mask;
+    this.table = getTable(options.tableId, options.poly, this.msbOffset, options.msb);
+    if (this.multiWords) {
+      this.crc = options.crc.slice();
+    } else {
+      this.crc = options.crc;
     }
-    var i = 0;
-    for (; i < words.length - 1; ++i) {
-      words[i] = (words[i] << bits) | (words[i + 1] >>> (32 - bits));
-    }
-    words[i] = (words[i] << bits);
-  };
-
-  Crc.prototype.rightShift = function (words, bits) {
-    if (!bits) {
-      return;
-    }
-    var i = words.length - 1;
-    for (; i > 0; --i) {
-      words[i] = (words[i - 1] << (32 - bits)) | (words[i] >>> bits);
-    }
-    words[i] = words[i] >>> bits;
-  };
+  }
 
   Crc.prototype.update = function (message) {
     if (this.finalized) {
@@ -206,30 +278,17 @@
 
   Crc.prototype.updateByte = function (byte) {
     var crc = this.crc;
-    if (this.options.refin) {
-      byte = reverse(byte, 8);
+    if (this.refin) {
+      byte = REVERSE_BYTE[byte];
     }
-    if (this.options.width > 32) {
+    if (this.multiWords) {
       crc[0] = crc[0] ^ (byte << this.msbOffset);
-      for (var j = 0; j < 8; ++j) {
-        if (crc[0] & this.msb) {
-          this.leftShift(crc, 1);
-          for (var i = 0; i < crc.length; ++i) {
-            crc[i] = crc[i] ^ this.poly[i];
-          }
-        } else {
-          this.leftShift(crc, 1);
-        }
-      }
+      var cache = this.table[(crc[0] >> this.msbOffset) & 0xFF];
+      leftShift(crc, 8);
+      xor(crc, cache);
     } else {
-      crc = crc ^ (byte << this.msbOffset);
-      for (var j = 0; j < 8; ++j) {
-        if (crc & this.msb) {
-          crc = (crc << 1) ^ this.poly;
-        } else {
-          crc = crc << 1;
-        }
-      }
+      crc = (crc ^ (byte << this.msbOffset));
+      crc = (crc << 8) ^ this.table[(crc >> this.msbOffset) & 0xFF];
     }
     this.crc = crc;
   };
@@ -239,23 +298,18 @@
       return;
     }
     this.finalized = true;
-    if (this.options.width > 32) {
-      this.rightShift(this.crc, this.bitOffset);
+    if (this.multiWords) {
+      rightShift(this.crc, this.bitOffset);
       this.crc[0] = this.crc[0] & this.mask;
       if (this.options.refout) {
-        this.crc = this.crc.reverse();
+        leftShift(this.crc, 32 - this.maskBits);
+        var crc = [];
         for (var i = 0; i < this.crc.length; ++i) {
-          this.crc[i] = reverse(this.crc[i], 32)
+          crc[this.crc.length - i - 1] = reverse(this.crc[i], 32)
         }
-        var offset = this.options.width % 32;
-        if (offset) {
-          offset = 32 - offset;
-        }
-        this.rightShift(this.crc, offset);
+        this.crc = crc;
       }
-      for (var i = 0; i < this.crc.length; ++i) {
-        this.crc[i] ^= this.options.xorout[i];
-      }
+      xor(this.crc, this.options.xorout);
     } else {
       this.crc = (this.crc >>> this.bitOffset) & this.mask;
       if (this.options.refout) {
@@ -267,48 +321,63 @@
 
   Crc.prototype.hex = function () {
     this.finalize();
-    var hex = [];
-    if (this.options.width > 32) {
-      for (var j = this.crc.length - 1; j >= 0; --j) {
-        var crc = this.crc[j];
-        var length = j === 0 ? this.options.width % 32 : 32;
-        if (!length) {
-          length = 32;
+    var hex = '';
+    var crc = this.crc;
+    var length = this.options.width;
+    if (this.multiWords) {
+      crc = crc[0];
+      length = length % 32 || 32;
+    }
+    for (var i = (Math.ceil(length / 4) << 2) - 4; i >= 0; i -= 4) {
+      hex += HEX_CHARS[(crc >> i) & 0x0F];
+    }
+    if (this.multiWords) {
+      for (var j = 1; j < this.crc.length; ++j) {
+        crc = this.crc[j];
+        for (i = 28; i >= 0; i -= 4) {
+          hex += HEX_CHARS[(crc >> i) & 0x0F];
         }
-        for (var i = 0; i < length; i += 4) {
-          hex.unshift(HEX_CHARS[(crc >> i) & 0x0F]);
-        }
-      }
-    } else {
-      for (var i = 0; i < this.options.width; i += 4) {
-        hex.unshift(HEX_CHARS[(this.crc >> i) & 0x0F]);
       }
     }
-    return hex.join('');
+    return hex;
   };
   Crc.prototype.toString = Crc.prototype.hex;
 
   Crc.prototype.array = function () {
     this.finalize();
-
-    var arr = [];
-    for (var i = 0; i < this.options.width; i += 8) {
-      arr.unshift((this.crc >> i) & 0xFF);
+    var arr = new Array(Math.ceil(this.options.width / 8));
+    var crc = this.crc;
+    var length = this.options.width;
+    if (this.multiWords) {
+      crc = crc[0];
+      length = length % 32 || 32;
+    }
+    var index = 0;
+    for (var i = (Math.ceil(length / 8) << 3) - 8; i >= 0; i -= 8) {
+      arr[index++] = (crc >> i) & 0xFF;
+    }
+    if (this.multiWords) {
+      for (var j = 1; j < this.crc.length; ++j) {
+        crc = this.crc[j];
+        for (i = 24; i >= 0; i -= 8) {
+          arr[index++] = (crc >> i) & 0xFF;
+        }
+      }
     }
     return arr;
   };
 
   var exports = {};
-  for (var i = 0;i < Modules.length;++i) {
-    var m = Modules[i];
+  for (var i = 0;i < MODELS.length;++i) {
+    var m = MODELS[i];
     exports[m.name] = createMethod(m);
   }
   exports.createCrc = createMethod;
   if (COMMON_JS) {
     module.exports = exports;
   } else {
-    for (i = 0;i < Modules.length;++i) {
-      var m = Modules[i];
+    for (i = 0;i < MODELS.length;++i) {
+      var m = MODELS[i];
       root[m.name] = exports[m.name];
     }
     root.createCrc = createMethod;

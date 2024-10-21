@@ -192,6 +192,16 @@
     });
   }
 
+  describe('crc32', function () {
+    context('when update multiple', function () {
+      it('should be equal', function () {
+        var crc = crc32.update('The quick brown fox jumps over the lazy dog')
+        crc.update('.')
+        expect(crc.hex()).to.be('519025e9');
+      });
+    });
+  });
+
   runTestCases('crc32', crc32);
   runTestCases('crc16', crc16);
 })(crc32, crc16);
