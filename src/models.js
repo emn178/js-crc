@@ -1,3 +1,12 @@
+/**
+ * [js-crc]{@link https://github.com/emn178/js-crc}
+ *
+ * @namespace crc
+ * @version 0.3.0
+ * @author Chen, Yi-Cyuan [emn178@gmail.com]
+ * @copyright Chen, Yi-Cyuan 2015-2024
+ * @license MIT
+ */
 // https://reveng.sourceforge.io/crc-catalogue/all.htm
 (function () {
   var MODELS = [
@@ -8,7 +17,6 @@
       refin: false,
       refout: false,
       xorout: 0x7,
-      check: 0x4,
       name: 'CRC-3/GSM'
     },
     {
@@ -18,7 +26,6 @@
       refin: true,
       refout: true,
       xorout: 0x0,
-      check: 0x6,
       name: 'CRC-3/ROHC'
     },
     {
@@ -28,8 +35,8 @@
       refin: true,
       refout: true,
       xorout: 0x0,
-      check: 0x7,
-      name: 'CRC-4/G-704'
+      name: 'CRC-4/G-704',
+      alias: ['CRC-4/ITU']
     },
     {
       width: 4,
@@ -38,7 +45,6 @@
       refin: false,
       refout: false,
       xorout: 0xf,
-      check: 0xb,
       name: 'CRC-4/INTERLAKEN'
     },
     {
@@ -48,8 +54,8 @@
       refin: false,
       refout: false,
       xorout: 0x00,
-      check: 0x00,
-      name: 'CRC-5/EPC-C1G2'
+      name: 'CRC-5/EPC-C1G2',
+      alias: ['CRC-5/EPC']
     },
     {
       width: 5,
@@ -58,8 +64,8 @@
       refin: true,
       refout: true,
       xorout: 0x00,
-      check: 0x07,
-      name: 'CRC-5/G-704'
+      name: 'CRC-5/G-704',
+      alias: ['CRC-5/ITU']
     },
     {
       width: 5,
@@ -68,7 +74,6 @@
       refin: true,
       refout: true,
       xorout: 0x1f,
-      check: 0x19,
       name: 'CRC-5/USB'
     },
     {
@@ -78,7 +83,6 @@
       refin: false,
       refout: false,
       xorout: 0x00,
-      check: 0x0d,
       name: 'CRC-6/CDMA2000-A'
     },
     {
@@ -88,7 +92,6 @@
       refin: false,
       refout: false,
       xorout: 0x00,
-      check: 0x3b,
       name: 'CRC-6/CDMA2000-B'
     },
     {
@@ -98,7 +101,6 @@
       refin: true,
       refout: true,
       xorout: 0x00,
-      check: 0x26,
       name: 'CRC-6/DARC'
     },
     {
@@ -108,8 +110,8 @@
       refin: true,
       refout: true,
       xorout: 0x00,
-      check: 0x06,
-      name: 'CRC-6/G-704'
+      name: 'CRC-6/G-704',
+      alias: ['CRC-6/ITU']
     },
     {
       width: 6,
@@ -118,7 +120,6 @@
       refin: false,
       refout: false,
       xorout: 0x3f,
-      check: 0x13,
       name: 'CRC-6/GSM'
     },
     {
@@ -128,8 +129,8 @@
       refin: false,
       refout: false,
       xorout: 0x00,
-      check: 0x75,
-      name: 'CRC-7/MMC'
+      name: 'CRC-7/MMC',
+      alias: ['CRC-7']
     },
     {
       width: 7,
@@ -138,7 +139,6 @@
       refin: true,
       refout: true,
       xorout: 0x00,
-      check: 0x53,
       name: 'CRC-7/ROHC'
     },
     {
@@ -148,7 +148,6 @@
       refin: false,
       refout: false,
       xorout: 0x00,
-      check: 0x61,
       name: 'CRC-7/UMTS'
     },
     {
@@ -158,7 +157,6 @@
       refin: false,
       refout: false,
       xorout: 0xff,
-      check: 0xdf,
       name: 'CRC-8/AUTOSAR'
     },
     {
@@ -168,7 +166,6 @@
       refin: true,
       refout: true,
       xorout: 0x00,
-      check: 0x26,
       name: 'CRC-8/BLUETOOTH'
     },
     {
@@ -178,7 +175,6 @@
       refin: false,
       refout: false,
       xorout: 0x00,
-      check: 0xda,
       name: 'CRC-8/CDMA2000'
     },
     {
@@ -188,7 +184,6 @@
       refin: true,
       refout: true,
       xorout: 0x00,
-      check: 0x15,
       name: 'CRC-8/DARC'
     },
     {
@@ -198,7 +193,6 @@
       refin: false,
       refout: false,
       xorout: 0x00,
-      check: 0xbc,
       name: 'CRC-8/DVB-S2'
     },
     {
@@ -208,7 +202,6 @@
       refin: false,
       refout: false,
       xorout: 0x00,
-      check: 0x37,
       name: 'CRC-8/GSM-A'
     },
     {
@@ -218,7 +211,6 @@
       refin: false,
       refout: false,
       xorout: 0xff,
-      check: 0x94,
       name: 'CRC-8/GSM-B'
     },
     {
@@ -228,7 +220,6 @@
       refin: false,
       refout: false,
       xorout: 0x00,
-      check: 0xb4,
       name: 'CRC-8/HITAG'
     },
     {
@@ -238,8 +229,8 @@
       refin: false,
       refout: false,
       xorout: 0x55,
-      check: 0xa1,
-      name: 'CRC-8/I-432-1'
+      name: 'CRC-8/I-432-1',
+      alias: ['CRC-8/ITU']
     },
     {
       width: 8,
@@ -248,7 +239,6 @@
       refin: false,
       refout: false,
       xorout: 0x00,
-      check: 0x7e,
       name: 'CRC-8/I-CODE'
     },
     {
@@ -258,7 +248,6 @@
       refin: false,
       refout: false,
       xorout: 0x00,
-      check: 0xea,
       name: 'CRC-8/LTE'
     },
     {
@@ -268,8 +257,8 @@
       refin: true,
       refout: true,
       xorout: 0x00,
-      check: 0xa1,
-      name: 'CRC-8/MAXIM-DOW'
+      name: 'CRC-8/MAXIM-DOW',
+      alias: ['CRC-8/MAXIM', 'DOW-CRC']
     },
     {
       width: 8,
@@ -278,7 +267,6 @@
       refin: false,
       refout: false,
       xorout: 0x00,
-      check: 0x99,
       name: 'CRC-8/MIFARE-MAD'
     },
     {
@@ -288,7 +276,6 @@
       refin: false,
       refout: false,
       xorout: 0x00,
-      check: 0xf7,
       name: 'CRC-8/NRSC-5'
     },
     {
@@ -298,7 +285,6 @@
       refin: false,
       refout: false,
       xorout: 0x00,
-      check: 0x3e,
       name: 'CRC-8/OPENSAFETY'
     },
     {
@@ -308,7 +294,6 @@
       refin: true,
       refout: true,
       xorout: 0x00,
-      check: 0xd0,
       name: 'CRC-8/ROHC'
     },
     {
@@ -318,7 +303,6 @@
       refin: false,
       refout: false,
       xorout: 0xff,
-      check: 0x4b,
       name: 'CRC-8/SAE-J1850'
     },
     {
@@ -328,8 +312,8 @@
       refin: false,
       refout: false,
       xorout: 0x00,
-      check: 0xf4,
-      name: 'CRC-8/SMBUS'
+      name: 'CRC-8/SMBUS',
+      alias: ['CRC-8']
     },
     {
       width: 8,
@@ -338,8 +322,8 @@
       refin: true,
       refout: true,
       xorout: 0x00,
-      check: 0x97,
-      name: 'CRC-8/TECH-3250'
+      name: 'CRC-8/TECH-3250',
+      alias: ['CRC-8/AES', 'CRC-8/EBU']
     },
     {
       width: 8,
@@ -348,7 +332,6 @@
       refin: true,
       refout: true,
       xorout: 0x00,
-      check: 0x25,
       name: 'CRC-8/WCDMA'
     },
     {
@@ -358,8 +341,8 @@
       refin: false,
       refout: false,
       xorout: 0x000,
-      check: 0x199,
-      name: 'CRC-10/ATM'
+      name: 'CRC-10/ATM',
+      alias: ['CRC-10', 'CRC-10/I-610']
     },
     {
       width: 10,
@@ -368,7 +351,6 @@
       refin: false,
       refout: false,
       xorout: 0x000,
-      check: 0x233,
       name: 'CRC-10/CDMA2000'
     },
     {
@@ -378,7 +360,6 @@
       refin: false,
       refout: false,
       xorout: 0x3ff,
-      check: 0x12a,
       name: 'CRC-10/GSM'
     },
     {
@@ -388,8 +369,8 @@
       refin: false,
       refout: false,
       xorout: 0x000,
-      check: 0x5a3,
-      name: 'CRC-11/FLEXRAY'
+      name: 'CRC-11/FLEXRAY',
+      alias: ['CRC-11']
     },
     {
       width: 11,
@@ -398,7 +379,6 @@
       refin: false,
       refout: false,
       xorout: 0x000,
-      check: 0x061,
       name: 'CRC-11/UMTS'
     },
     {
@@ -408,7 +388,6 @@
       refin: false,
       refout: false,
       xorout: 0x000,
-      check: 0xd4d,
       name: 'CRC-12/CDMA2000'
     },
     {
@@ -418,8 +397,8 @@
       refin: false,
       refout: false,
       xorout: 0x000,
-      check: 0xf5b,
-      name: 'CRC-12/DECT'
+      name: 'CRC-12/DECT',
+      alias: ['X-CRC-12']
     },
     {
       width: 12,
@@ -428,7 +407,6 @@
       refin: false,
       refout: false,
       xorout: 0xfff,
-      check: 0xb34,
       name: 'CRC-12/GSM'
     },
     {
@@ -438,8 +416,8 @@
       refin: false,
       refout: true,
       xorout: 0x000,
-      check: 0xdaf,
-      name: 'CRC-12/UMTS'
+      name: 'CRC-12/UMTS',
+      alias: ['CRC-12/3GPP']
     },
     {
       width: 13,
@@ -448,7 +426,6 @@
       refin: false,
       refout: false,
       xorout: 0x0000,
-      check: 0x04fa,
       name: 'CRC-13/BBC'
     },
     {
@@ -458,7 +435,6 @@
       refin: true,
       refout: true,
       xorout: 0x0000,
-      check: 0x082d,
       name: 'CRC-14/DARC'
     },
     {
@@ -468,7 +444,6 @@
       refin: false,
       refout: false,
       xorout: 0x3fff,
-      check: 0x30ae,
       name: 'CRC-14/GSM'
     },
     {
@@ -478,8 +453,8 @@
       refin: false,
       refout: false,
       xorout: 0x0000,
-      check: 0x059e,
-      name: 'CRC-15/CAN'
+      name: 'CRC-15/CAN',
+      alias: ['CRC-15']
     },
     {
       width: 15,
@@ -488,7 +463,6 @@
       refin: false,
       refout: false,
       xorout: 0x0001,
-      check: 0x2566,
       name: 'CRC-15/MPT1327'
     },
     {
@@ -498,8 +472,8 @@
       refin: true,
       refout: true,
       xorout: 0x0000,
-      check: 0xbb3d,
-      name: 'CRC-16/ARC'
+      name: 'CRC-16/ARC',
+      alias: ['ARC', 'CRC-16', 'CRC-16/LHA', 'CRC-IBM']
     },
     {
       width: 16,
@@ -508,7 +482,6 @@
       refin: false,
       refout: false,
       xorout: 0x0000,
-      check: 0x4c06,
       name: 'CRC-16/CDMA2000'
     },
     {
@@ -518,7 +491,6 @@
       refin: false,
       refout: false,
       xorout: 0x0000,
-      check: 0xaee7,
       name: 'CRC-16/CMS'
     },
     {
@@ -528,7 +500,6 @@
       refin: false,
       refout: false,
       xorout: 0x0000,
-      check: 0x9ecf,
       name: 'CRC-16/DDS-110'
     },
     {
@@ -538,8 +509,8 @@
       refin: false,
       refout: false,
       xorout: 0x0001,
-      check: 0x007e,
-      name: 'CRC-16/DECT-R'
+      name: 'CRC-16/DECT-R',
+      alias: ['R-CRC-16']
     },
     {
       width: 16,
@@ -548,8 +519,8 @@
       refin: false,
       refout: false,
       xorout: 0x0000,
-      check: 0x007f,
-      name: 'CRC-16/DECT-X'
+      name: 'CRC-16/DECT-X',
+      alias: ['X-CRC-16']
     },
     {
       width: 16,
@@ -558,7 +529,6 @@
       refin: true,
       refout: true,
       xorout: 0xffff,
-      check: 0xea82,
       name: 'CRC-16/DNP'
     },
     {
@@ -568,7 +538,6 @@
       refin: false,
       refout: false,
       xorout: 0xffff,
-      check: 0xc2b7,
       name: 'CRC-16/EN-13757'
     },
     {
@@ -578,8 +547,8 @@
       refin: false,
       refout: false,
       xorout: 0xffff,
-      check: 0xd64e,
-      name: 'CRC-16/GENIBUS'
+      name: 'CRC-16/GENIBUS',
+      alias: ['CRC-16/DARC', 'CRC-16/EPC', 'CRC-16/EPC-C1G2', 'CRC-16/I-CODE']
     },
     {
       width: 16,
@@ -588,7 +557,6 @@
       refin: false,
       refout: false,
       xorout: 0xffff,
-      check: 0xce3c,
       name: 'CRC-16/GSM'
     },
     {
@@ -598,8 +566,8 @@
       refin: false,
       refout: false,
       xorout: 0x0000,
-      check: 0x29b1,
-      name: 'CRC-16/IBM-3740'
+      name: 'CRC-16/IBM-3740',
+      alias: ['CRC-16/AUTOSAR', 'CRC-16/CCITT-FALSE']
     },
     {
       width: 16,
@@ -608,8 +576,8 @@
       refin: true,
       refout: true,
       xorout: 0xffff,
-      check: 0x906e,
-      name: 'CRC-16/IBM-SDLC'
+      name: 'CRC-16/IBM-SDLC',
+      alias: ['CRC-16/ISO-HDLC', 'CRC-16/ISO-IEC-14443-3-B', 'CRC-16/X-25', 'CRC-B', 'X-25']
     },
     {
       width: 16,
@@ -618,8 +586,8 @@
       refin: true,
       refout: true,
       xorout: 0x0000,
-      check: 0xbf05,
-      name: 'CRC-16/ISO-IEC-14443-3-A'
+      name: 'CRC-16/ISO-IEC-14443-3-A',
+      alias: ['CRC-A']
     },
     {
       width: 16,
@@ -628,8 +596,8 @@
       refin: true,
       refout: true,
       xorout: 0x0000,
-      check: 0x2189,
-      name: 'CRC-16/KERMIT'
+      name: 'CRC-16/KERMIT',
+      alias: ['CRC-16/BLUETOOTH', 'CRC-16/CCITT', 'CRC-16/CCITT-TRUE', 'CRC-16/V-41-LSB', 'CRC-CCITT', 'KERMIT']
     },
     {
       width: 16,
@@ -638,7 +606,6 @@
       refin: false,
       refout: false,
       xorout: 0x0000,
-      check: 0xbdf4,
       name: 'CRC-16/LJ1200'
     },
     {
@@ -648,7 +615,6 @@
       refin: false,
       refout: false,
       xorout: 0x0000,
-      check: 0x772b,
       name: 'CRC-16/M17'
     },
     {
@@ -658,8 +624,8 @@
       refin: true,
       refout: true,
       xorout: 0xffff,
-      check: 0x44c2,
-      name: 'CRC-16/MAXIM-DOW'
+      name: 'CRC-16/MAXIM-DOW',
+      alias: ['CRC-16/MAXIM']
     },
     {
       width: 16,
@@ -668,7 +634,6 @@
       refin: true,
       refout: true,
       xorout: 0x0000,
-      check: 0x6f91,
       name: 'CRC-16/MCRF4XX'
     },
     {
@@ -678,8 +643,8 @@
       refin: true,
       refout: true,
       xorout: 0x0000,
-      check: 0x4b37,
-      name: 'CRC-16/MODBUS'
+      name: 'CRC-16/MODBUS',
+      alias: ['MODBUS']
     },
     {
       width: 16,
@@ -688,7 +653,6 @@
       refin: true,
       refout: true,
       xorout: 0x0000,
-      check: 0xa066,
       name: 'CRC-16/NRSC-5'
     },
     {
@@ -698,7 +662,6 @@
       refin: false,
       refout: false,
       xorout: 0x0000,
-      check: 0x5d38,
       name: 'CRC-16/OPENSAFETY-A'
     },
     {
@@ -708,7 +671,6 @@
       refin: false,
       refout: false,
       xorout: 0x0000,
-      check: 0x20fe,
       name: 'CRC-16/OPENSAFETY-B'
     },
     {
@@ -718,8 +680,8 @@
       refin: false,
       refout: false,
       xorout: 0xffff,
-      check: 0xa819,
-      name: 'CRC-16/PROFIBUS'
+      name: 'CRC-16/PROFIBUS',
+      alias: ['CRC-16/IEC-61158-2']
     },
     {
       width: 16,
@@ -728,7 +690,6 @@
       refin: true,
       refout: true,
       xorout: 0x0000,
-      check: 0x63d0,
       name: 'CRC-16/RIELLO'
     },
     {
@@ -738,8 +699,8 @@
       refin: false,
       refout: false,
       xorout: 0x0000,
-      check: 0xe5cc,
-      name: 'CRC-16/SPI-FUJITSU'
+      name: 'CRC-16/SPI-FUJITSU',
+      alias: ['CRC-16/AUG-CCITT']
     },
     {
       width: 16,
@@ -748,7 +709,6 @@
       refin: false,
       refout: false,
       xorout: 0x0000,
-      check: 0xd0db,
       name: 'CRC-16/T10-DIF'
     },
     {
@@ -758,7 +718,6 @@
       refin: false,
       refout: false,
       xorout: 0x0000,
-      check: 0x0fb3,
       name: 'CRC-16/TELEDISK'
     },
     {
@@ -768,7 +727,6 @@
       refin: true,
       refout: true,
       xorout: 0x0000,
-      check: 0x26b1,
       name: 'CRC-16/TMS37157'
     },
     {
@@ -778,8 +736,8 @@
       refin: false,
       refout: false,
       xorout: 0x0000,
-      check: 0xfee8,
-      name: 'CRC-16/UMTS'
+      name: 'CRC-16/UMTS',
+      alias: ['CRC-16/BUYPASS', 'CRC-16/VERIFONE']
     },
     {
       width: 16,
@@ -788,7 +746,6 @@
       refin: true,
       refout: true,
       xorout: 0xffff,
-      check: 0xb4c8,
       name: 'CRC-16/USB'
     },
     {
@@ -798,8 +755,8 @@
       refin: false,
       refout: false,
       xorout: 0x0000,
-      check: 0x31c3,
-      name: 'CRC-16/XMODEM'
+      name: 'CRC-16/XMODEM',
+      alias: ['CRC-16/ACORN', 'CRC-16/LTE', 'CRC-16/V-41-MSB', 'XMODEM', 'ZMODEM']
     },
     {
       width: 17,
@@ -808,7 +765,6 @@
       refin: false,
       refout: false,
       xorout: 0x00000,
-      check: 0x04f03,
       name: 'CRC-17/CAN-FD'
     },
     {
@@ -818,7 +774,6 @@
       refin: false,
       refout: false,
       xorout: 0x000000,
-      check: 0x0ed841,
       name: 'CRC-21/CAN-FD'
     },
     {
@@ -828,7 +783,6 @@
       refin: true,
       refout: true,
       xorout: 0x000000,
-      check: 0xc25a56,
       name: 'CRC-24/BLE'
     },
     {
@@ -838,7 +792,6 @@
       refin: false,
       refout: false,
       xorout: 0x000000,
-      check: 0x7979bd,
       name: 'CRC-24/FLEXRAY-A'
     },
     {
@@ -848,7 +801,6 @@
       refin: false,
       refout: false,
       xorout: 0x000000,
-      check: 0x1f23b8,
       name: 'CRC-24/FLEXRAY-B'
     },
     {
@@ -858,7 +810,6 @@
       refin: false,
       refout: false,
       xorout: 0xffffff,
-      check: 0xb4f3e6,
       name: 'CRC-24/INTERLAKEN'
     },
     {
@@ -868,7 +819,6 @@
       refin: false,
       refout: false,
       xorout: 0x000000,
-      check: 0xcde703,
       name: 'CRC-24/LTE-A'
     },
     {
@@ -878,7 +828,6 @@
       refin: false,
       refout: false,
       xorout: 0x000000,
-      check: 0x23ef52,
       name: 'CRC-24/LTE-B'
     },
     {
@@ -888,8 +837,8 @@
       refin: false,
       refout: false,
       xorout: 0x000000,
-      check: 0x21cf02,
-      name: 'CRC-24/OPENPGP'
+      name: 'CRC-24/OPENPGP',
+      alias: ['CRC-24']
     },
     {
       width: 24,
@@ -898,7 +847,6 @@
       refin: false,
       refout: false,
       xorout: 0xffffff,
-      check: 0x200fa5,
       name: 'CRC-24/OS-9'
     },
     {
@@ -908,7 +856,6 @@
       refin: false,
       refout: false,
       xorout: 0x3fffffff,
-      check: 0x04c34abf,
       name: 'CRC-30/CDMA'
     },
     {
@@ -918,7 +865,6 @@
       refin: false,
       refout: false,
       xorout: 0x7fffffff,
-      check: 0x0ce9e46c,
       name: 'CRC-31/PHILIPS'
     },
     {
@@ -928,8 +874,8 @@
       refin: false,
       refout: false,
       xorout: 0x00000000,
-      check: 0x3010bf7f,
-      name: 'CRC-32/AIXM'
+      name: 'CRC-32/AIXM',
+      alias: ['CRC-32Q']
     },
     {
       width: 32,
@@ -938,7 +884,6 @@
       refin: true,
       refout: true,
       xorout: 0xffffffff,
-      check: 0x1697d06a,
       name: 'CRC-32/AUTOSAR'
     },
     {
@@ -948,8 +893,8 @@
       refin: true,
       refout: true,
       xorout: 0xffffffff,
-      check: 0x87315576,
-      name: 'CRC-32/BASE91-D'
+      name: 'CRC-32/BASE91-D',
+      alias: ['CRC-32D']
     },
     {
       width: 32,
@@ -958,8 +903,8 @@
       refin: false,
       refout: false,
       xorout: 0xffffffff,
-      check: 0xfc891918,
-      name: 'CRC-32/BZIP2'
+      name: 'CRC-32/BZIP2',
+      alias: ['CRC-32/AAL5', 'CRC-32/DECT-B', 'B-CRC-32']
     },
     {
       width: 32,
@@ -968,7 +913,6 @@
       refin: true,
       refout: true,
       xorout: 0x00000000,
-      check: 0x6ec2edc4,
       name: 'CRC-32/CD-ROM-EDC'
     },
     {
@@ -978,8 +922,8 @@
       refin: false,
       refout: false,
       xorout: 0xffffffff,
-      check: 0x765e7680,
-      name: 'CRC-32/CKSUM'
+      name: 'CRC-32/CKSUM',
+      alias: ['CKSUM', 'CRC-32/POSIX']
     },
     {
       width: 32,
@@ -988,8 +932,8 @@
       refin: true,
       refout: true,
       xorout: 0xffffffff,
-      check: 0xe3069283,
-      name: 'CRC-32/ISCSI'
+      name: 'CRC-32/ISCSI',
+      alias: ['CRC-32/BASE91-C', 'CRC-32/CASTAGNOLI', 'CRC-32/INTERLAKEN', 'CRC-32C', 'CRC-32/NVME']
     },
     {
       width: 32,
@@ -998,8 +942,8 @@
       refin: true,
       refout: true,
       xorout: 0xffffffff,
-      check: 0xcbf43926,
-      name: 'CRC-32/ISO-HDLC'
+      name: 'CRC-32/ISO-HDLC',
+      alias: ['CRC-32', 'CRC-32/ADCCP', 'CRC-32/V-42', 'CRC-32/XZ', 'PKZIP']
     },
     {
       width: 32,
@@ -1008,8 +952,8 @@
       refin: true,
       refout: true,
       xorout: 0x00000000,
-      check: 0x340bc6d9,
-      name: 'CRC-32/JAMCRC'
+      name: 'CRC-32/JAMCRC',
+      alias: ['JAMCRC']
     },
     {
       width: 32,
@@ -1018,7 +962,6 @@
       refin: true,
       refout: true,
       xorout: 0x00000000,
-      check: 0xd2c22f51,
       name: 'CRC-32/MEF'
     },
     {
@@ -1028,7 +971,6 @@
       refin: false,
       refout: false,
       xorout: 0x00000000,
-      check: 0x0376e6e7,
       name: 'CRC-32/MPEG-2'
     },
     {
@@ -1038,8 +980,8 @@
       refin: false,
       refout: false,
       xorout: 0x00000000,
-      check: 0xbd0be338,
-      name: 'CRC-32/XFER'
+      name: 'CRC-32/XFER',
+      alias: ['XFER']
     },
     {
       width: 40,
@@ -1048,7 +990,6 @@
       refin: false,
       refout: false,
       xorout: [0xff, 0xffffffff],
-      check: 0xd4164fc646,
       name: 'CRC-40/GSM'
     },
     {
@@ -1058,8 +999,8 @@
       refin: false,
       refout: false,
       xorout: [0, 0],
-      check: 0x6c40df5f0b497347,
-      name: 'CRC-64/ECMA-182'
+      name: 'CRC-64/ECMA-182',
+      alias: ['CRC-64']
     },
     {
       width: 64,
@@ -1068,7 +1009,6 @@
       refin: true,
       refout: true,
       xorout: [0xffffffff, 0xffffffff],
-      check: 0xb90956c775a41001,
       name: 'CRC-64/GO-ISO'
     },
     {
@@ -1078,7 +1018,6 @@
       refin: true,
       refout: true,
       xorout: [0, 0],
-      check: 0x75d4b74f024eceea,
       name: 'CRC-64/MS'
     },
     {
@@ -1088,7 +1027,6 @@
       refin: true,
       refout: true,
       xorout: [0xffffffff, 0xffffffff],
-      check: 0xae8b14860a799888,
       name: 'CRC-64/NVME'
     },
     {
@@ -1098,7 +1036,6 @@
       refin: true,
       refout: true,
       xorout: [0, 0],
-      check: 0xe9c6d914c4b8d9ca,
       name: 'CRC-64/REDIS'
     },
     {
@@ -1108,7 +1045,6 @@
       refin: false,
       refout: false,
       xorout: [0xffffffff, 0xffffffff],
-      check: 0x62ec59e3f1a4f00a,
       name: 'CRC-64/WE'
     },
     {
@@ -1118,8 +1054,8 @@
       refin: true,
       refout: true,
       xorout: [0xffffffff, 0xffffffff],
-      check: 0x995dc9bbdf1939fa,
-      name: 'CRC-64/XZ'
+      name: 'CRC-64/XZ',
+      alias: ['CRC-64/GO-ECMA']
     },
     {
       width: 82,
@@ -1128,9 +1064,8 @@
       refin: true,
       refout: true,
       xorout: [0, 0, 0],
-      check: 0x09ea83f625023801fd612,
       name: 'CRC-82/DARC'
-    },
+    }
   ];
 
   var WINDOW = typeof window === 'object';
@@ -1157,18 +1092,24 @@
     for (var i = 0; i < MODELS.length; ++i) {
       var model = MODELS[i];
       var methodName = model.name.replace(/[-/]/g, '_').toLocaleLowerCase();
-      exports[methodName] = createCrc(MODELS[i]);
+      exports[methodName] = createModel(MODELS[i]);
+      if (model.alias) {
+        for (var j = 0; j < model.alias.length; ++j) {
+          var aliasMethodName = model.alias[j].replace(/[-/]/g, '_').toLocaleLowerCase();
+          exports[aliasMethodName] = exports[methodName];
+        }
+      }
     }
   }
 
-  var createCrc;
+  var createModel;
   var exports = {};
   if (COMMON_JS) {
-    createCrc = require('./crc.js').createCrc;
+    createModel = require('./crc.js').createModel;
     createMethods(exports);
     module.exports = exports;
   } else {
-    createCrc = root.createCrc;
+    createModel = root.createModel;
     createMethods(exports);
     for (var key in exports) {
       root[key] = exports[key];

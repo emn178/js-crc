@@ -2,9 +2,9 @@
  * [js-crc]{@link https://github.com/emn178/js-crc}
  *
  * @namespace crc
- * @version 0.2.0
+ * @version 0.3.0
  * @author Chen, Yi-Cyuan [emn178@gmail.com]
- * @copyright Chen, Yi-Cyuan 2015-2017
+ * @copyright Chen, Yi-Cyuan 2015-2024
  * @license MIT
  */
 /*jslint bitwise: true */
@@ -29,41 +29,7 @@
   var AMD = typeof define === 'function' && define.amd;
   var ARRAY_BUFFER = !root.JS_CRC_NO_ARRAY_BUFFER && typeof ArrayBuffer !== 'undefined';
   var HEX_CHARS = '0123456789abcdef'.split('');
-
-  var isArray = Array.isArray;
-  if (root.JS_CRC_NO_NODE_JS || !isArray) {
-    isArray = function (obj) {
-      return Object.prototype.toString.call(obj) === '[object Array]';
-    };
-  }
-
-  var isView = ArrayBuffer.isView;
-  if (ARRAY_BUFFER && (root.JS_CRC_NO_ARRAY_BUFFER_IS_VIEW || !isView)) {
-    isView = function (obj) {
-      return typeof obj === 'object' && obj.buffer && obj.buffer.constructor === ArrayBuffer;
-    };
-  }
-
-  // [message: string, isString: bool]
-  var formatMessage = function (message) {
-    var type = typeof message;
-    if (type === 'string') {
-      return [message, true];
-    }
-    if (type !== 'object' || message === null) {
-      throw new Error(INPUT_ERROR);
-    }
-    if (ARRAY_BUFFER && message.constructor === ArrayBuffer) {
-      return [new Uint8Array(message), false];
-    }
-    if (!isArray(message) && !isView(message)) {
-      throw new Error(INPUT_ERROR);
-    }
-    return [message, false];
-  }
-
   var OUTPUT_TYPES = ['hex', 'array'];
-
   var MODELS = [
     {
       width: 32,
@@ -87,23 +53,51 @@
     }
   ];
 
-  var createOutputMethod = function (outputType, options) {
+  var isArray = Array.isArray;
+  if (root.JS_CRC_NO_NODE_JS || !isArray) {
+    isArray = function (obj) {
+      return Object.prototype.toString.call(obj) === '[object Array]';
+    };
+  }
+
+  var isView = ArrayBuffer.isView;
+  if (ARRAY_BUFFER && (root.JS_CRC_NO_ARRAY_BUFFER_IS_VIEW || !isView)) {
+    isView = function (obj) {
+      return typeof obj === 'object' && obj.buffer && obj.buffer.constructor === ArrayBuffer;
+    };
+  }
+
+  // [message: string, isString: bool]
+  function formatMessage(message) {
+    var type = typeof message;
+    if (type === 'string') {
+      return [message, true];
+    }
+    if (type !== 'object' || message === null) {
+      throw new Error(INPUT_ERROR);
+    }
+    if (ARRAY_BUFFER && message.constructor === ArrayBuffer) {
+      return [new Uint8Array(message), false];
+    }
+    if (!isArray(message) && !isView(message)) {
+      throw new Error(INPUT_ERROR);
+    }
+    return [message, false];
+  }
+
+  function createOutputMethod(outputType, options) {
     return function (message) {
       return new Crc(options).update(message)[outputType]();
     };
-  };
+  }
 
-  var createMethod = function (module) {
-    var bitOffset = module.width % 8;
-    if (bitOffset) {
-      bitOffset = 8 - bitOffset;
-    }
+  function createMethod(module) {
+    var bitOffset = 8 - (module.width % 8 || 8);
     var firstBlockBytes = Math.ceil(module.width / 8) % 4 || 4;
     var firstBlockBits = firstBlockBytes << 3;
     var msb = (1 << (firstBlockBits - 1)) >>> 0;
     var msbOffset = firstBlockBits - 8;
     var maskBits = module.width % 32 || 32;
-    var mask = 2**maskBits - 1;
     var crc, poly, tableId;
     var multiWords = module.width > 32;
     if (multiWords) {
@@ -126,11 +120,11 @@
       bitOffset: bitOffset,
       msb: msb,
       msbOffset: msbOffset,
-      mask: mask,
+      maskBits: maskBits,
+      mask: 2**maskBits - 1,
       crc: crc,
       poly: poly,
-      tableId: tableId,
-      maskBits: maskBits
+      tableId: tableId
     };
     var method = createOutputMethod('hex', options);
     method.create = function () {
@@ -144,7 +138,7 @@
       method[type] = createOutputMethod(type, options);
     }
     return method;
-  };
+  }
 
   function leftShift(words, bits) {
     if (!bits) {
@@ -174,12 +168,12 @@
     }
   }
 
-  var cache = {};
+  var TABLES = {};
   function getTable(tableId, poly, msbOffset, msb) {
-    if (!cache[tableId]) {
-      cache[tableId] = createTable(poly, msbOffset, msb);
+    if (!TABLES[tableId]) {
+      TABLES[tableId] = createTable(poly, msbOffset, msb);
     }
-    return cache[tableId];
+    return TABLES[tableId];
   }
 
   function createTable(poly, msbOffset, msb) {
@@ -372,7 +366,7 @@
     var m = MODELS[i];
     exports[m.name] = createMethod(m);
   }
-  exports.createCrc = createMethod;
+  exports.createModel = createMethod;
   if (COMMON_JS) {
     module.exports = exports;
   } else {
@@ -380,7 +374,7 @@
       var m = MODELS[i];
       root[m.name] = exports[m.name];
     }
-    root.createCrc = createMethod;
+    root.createModel = createMethod;
     if (AMD) {
       define(function() {
         return exports;

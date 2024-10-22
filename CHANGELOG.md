@@ -1,5 +1,16 @@
 # Change Log
 
+## v0.2.0 / 2024-10-22
+### Added
+- model params support
+- Streaming support
+- web worker support.
+- TypeScript support
+- many predefined models.
+
+### Changed
+- throw error if input type is incorrect.
+
 ## v0.2.0 / 2017-02-08
 ### Added
 - AMD support.

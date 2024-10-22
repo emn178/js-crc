@@ -6,6 +6,7 @@ function unset() {
   delete require.cache[require.resolve('./test.js')];
   crc16 = null;
   crc32 = null;
+  createModel = null;
   Object.keys(require('../src/models.js')).forEach((key) => {
     global[key] = null;
   });
@@ -23,6 +24,7 @@ function unset() {
 function requireToGlobal() {
   crc16 = require('../src/crc.js').crc16;
   crc32 = require('../src/crc.js').crc32;
+  createModel = require('../src/crc.js').createModel;
   Object.assign(global, require('../src/models.js'));
 }
 

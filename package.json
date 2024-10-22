@@ -1,8 +1,20 @@
 {
   "name": "js-crc",
-  "version": "0.2.0",
-  "description": "Simple CRC checksum functions for JavaScript(CRC-16 and CRC-32).",
-  "main": "src/crc.js",
+  "version": "0.3.0",
+  "description": "Simple CRC checksum functions for JavaScript. Supports many predefined models such as CRC-8, CRC-16, CRC-24, CRC-32, and CRC-64. It also supports custom CRC models.",
+  "main": "./src/crc.min.js",
+  "exports": {
+    ".": {
+      "require": "./src/crc.js",
+      "import": "./src/crc.js",
+      "types": "./index.d.ts"
+    },
+    "./models": {
+      "require": "./src/models.js",
+      "import": "./src/models.js",
+      "types": "./models.d.ts"
+    }
+  },
   "devDependencies": {
     "expect.js": "~0.3.1",
     "mocha": "~10.2.0",
@@ -14,7 +26,7 @@
     "test": "nyc mocha tests/node-test.js",
     "report": "nyc --reporter=html --reporter=text mocha tests/node-test.js",
     "coveralls": "nyc report --reporter=text-lcov | coveralls",
-    "build": "uglifyjs src/crc.js -c -m eval --comments -o build/crc.min.js"
+    "build": "uglifyjs src/crc.js -c -m eval --comments -o build/crc.min.js && uglifyjs src/models.js -c -m eval --comments -o build/models.min.js"
   },
   "repository": {
     "type": "git",
@@ -22,8 +34,11 @@
   },
   "keywords": [
     "crc",
+    "crc-8",
     "crc-16",
-    "crc-32"
+    "crc-24",
+    "crc-32",
+    "crc-64"
   ],
   "license": "MIT",
   "author": "Chen, Yi-Cyuan <emn178@gmail.com>",

@@ -1,4 +1,4 @@
-(function(crc32, crc16) {
+(function(crc32, crc16, createModel) {
   Array.prototype.toHexString = ArrayBuffer.prototype.toHexString = function () {
     var array = new Uint8Array(this);
     var hex = '';
@@ -204,4 +204,71 @@
 
   runTestCases('crc32', crc32);
   runTestCases('crc16', crc16);
-})(crc32, crc16);
+
+  describe('custom', function () {
+    var str = '123456789';
+
+    context('when 30 bits', function () {
+      var model = {
+        width: 30,
+        poly: 0x2030b9c7,
+        init: 0x3fffffff,
+        xorout: 0x3fffffff
+      };
+
+      context('when refin true and refout false', function () {
+        it('should be equal', function () {
+          model
+          var crc = createModel({
+            ...model,
+            refin: true,
+            refout: false
+          });
+          expect(crc(str)).to.be('24083d85');
+        });
+      });
+
+      context('when refin true and refout false', function () {
+        it('should be equal', function () {
+          var crc = createModel({
+            ...model,
+            refin: false,
+            refout: true
+          });
+          expect(crc(str)).to.be('3f54b0c8');
+        });
+      });
+    });
+
+    context('when 64 bits', function () {
+      var model = {
+        width: 64,
+        poly: [0x259c84cb, 0xa6426349],
+        init: [0xffffffff, 0xffffffff],
+        xorout: [0, 0]
+      };
+
+      context('when refin true and refout false', function () {
+        it('should be equal', function () {
+          var crc = createModel({
+            ...model,
+            refin: true,
+            refout: false
+          });
+          expect(crc(str)).to.be('57737240f2ed2bae');
+        });
+      });
+
+      context('when refin false and refout true', function () {
+        it('should be equal', function () {
+          var crc = createModel({
+            ...model,
+            refin: false,
+            refout: true
+          });
+          expect(crc(str)).to.be('575f8b8ce1d16f98');
+        });
+      });
+    });
+  });
+})(crc32, crc16, createModel);
