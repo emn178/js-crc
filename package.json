@@ -1,6 +1,6 @@
 {
   "name": "js-crc",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Simple CRC checksum functions for JavaScript. Supports many predefined models such as CRC-8, CRC-16, CRC-24, CRC-32, and CRC-64. It also supports custom CRC models.",
   "main": "./src/crc.js",
   "exports": {
