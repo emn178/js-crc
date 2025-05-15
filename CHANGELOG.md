@@ -1,6 +1,10 @@
 # Change Log
 
-## v0.2.0 / 2024-10-22
+## v0.3.1 / 2024-10-22
+### Fixed
+- package.json main path.
+
+## v0.3.0 / 2024-10-22
 ### Added
 - model params support
 - Streaming support

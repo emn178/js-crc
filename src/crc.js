@@ -2,7 +2,7 @@
  * [js-crc]{@link https://github.com/emn178/js-crc}
  *
  * @namespace crc
- * @version 0.3.0
+ * @version 0.3.1
  * @author Chen, Yi-Cyuan [emn178@gmail.com]
  * @copyright Chen, Yi-Cyuan 2015-2024
  * @license MIT
